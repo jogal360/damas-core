@@ -54,8 +54,6 @@ module.exports = function(app){
 			else {
 				res.json(doc);
 			}
-			else
-				res.status(404).send('Id not found');
 		});
 	};
 
