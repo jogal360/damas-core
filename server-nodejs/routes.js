@@ -1,13 +1,13 @@
 module.exports = function(app){
 
 	var mongoModel 	= require('./model.js'),
+		helpers		= require('./helpers'),
 	    bodyParser 	= require('body-parser'),
-		mongo 		= require('mongodb'),
-	 	ObjectId    = mongo.ObjectID;
 		methodOverride = require('method-override');
+
 		mod      	= new mongoModel();
 
-
+	//Middlewares
 	app.use(bodyParser.urlencoded({extended : true}));
 	app.use(bodyParser.json());
 	
@@ -39,8 +39,10 @@ module.exports = function(app){
 		}
 		else{
 			//Invalid JSON
-			if(!this.isValidJson((keys))){
-				res.status(409).send('create Error, please change your values');
+			if(!helpers.isValidJson((keys))){
+				res
+					.status(409)
+					.send('create Error, please change your values');
 			}
 			
 			//Correct Format - keys
@@ -72,7 +74,7 @@ module.exports = function(app){
 				.status(400)
 				.send('Bad command');
 		else {
-			if(! isValidObjectId(id))
+			if(! helpers.isValidObjectId(id))
 				res
 						.status(404)
 						.send('Id not found');
@@ -81,8 +83,8 @@ module.exports = function(app){
 				mod.read(id, function(error, doc){
 					if(error){
 						res
-							.status(404)
-							.send('Id not found');
+							.status(409)
+							.send('Read Error, please change your values');
 					}
 					else {
 						if(doc === null){
@@ -92,7 +94,8 @@ module.exports = function(app){
 						}
 						else {
 							res
-								.json(doc);
+								.status(200)
+								.send(doc);
 						}
 					}
 				});
@@ -104,23 +107,32 @@ module.exports = function(app){
 		var id;
 		var keys = req.body;
 		if(req.params.id)
-			id = req.params.id;
+			id   = req.params.id;
 		else if(keys.id){
-			id = keys.id;
+			id   = keys.id;
 			delete keys.id;
 		}
-		if(!id || Object.keys(keys).length === 0){
-			res.status(400).send('Bad command');
-		}
+		if( Object.keys(keys).length === 0 || id === "undefined")
+			res
+				.status(400)
+				.send('Bad command');
 		else {
-		    mod.update(id, keys, function(error, doc){
-				if(error){
-					res.status(409).send('Update Error, please change your values');
-				}
-				else{
-					res.json(doc);
-				}
-			});
+			if(! helpers.isValidObjectId(id))
+				res
+					.status(404)
+					.send('Id not found');
+			else {
+				mod.update(id, keys, function(error, doc){
+					if(error)
+						res
+							.status(409)
+							.send('Update Error, please change your values');
+					else
+						res
+							.json(doc);
+				});
+				
+			}
 		}
 	};
 
@@ -132,36 +144,19 @@ module.exports = function(app){
 			id = req.body.id;
 		if(id)
 			mod.deleteNode(id, function(error, doc){
-				if(error){
-					res.status(409).send('delete Error, please change your values');
-				}
-				else{
-					res.send(doc.result.n+" documents deleted.");
-				}
+				if(error)
+					res
+						.status(409)
+						.send('delete Error, please change your values');
+				else
+					res
+						.status(200)
+						.send(doc.result.n + " documents deleted.");
 			});
 		else
 			res.status(400).send("Bad command");
 	};
 
-	isValidJson = function(keys){
-		for(var val in keys){
-			var y;
-			if(Object.prototype.hasOwnProperty.call(keys,  val)){
-				y = keys[val];
-				if(y = '' || y=== null || y===''){
-					return false;
-				}
-			}
-		}
-		return true;
-	};
-	isValidObjectId = function(id){
-		if(ObjectId.isValid(id)) 
-      		return true;
-    	else
-      		return false;
-
-	}
 	app.get('/:id', read);
 	app.get('/', read);
 	app.post('/', create);

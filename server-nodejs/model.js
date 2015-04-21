@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 var mongo  = require('mongodb'),
     conf   = require('./conf'),
     Server = mongo.Server,
@@ -12,7 +11,7 @@ module.exports = function Model() {
     var dataMongo  = conf.mongoDB,
         server     = new Server(dataMongo.host, dataMongo.port, dataMongo.options),
         db         = new Db(dataMongo.collection, server),
-        collection = null;
+        collection = db.collection(dataMongo.collection);
  
 //END: ----------------MONGODB--------------
 
@@ -29,7 +28,6 @@ module.exports = function Model() {
       if(err)
         callback(err);
       else {
-        collection = db.collection(dataMongo.collection);
         collection.insert( keys, {safe:true}, function(err, records) {
           if (err) 
             callback(err);
@@ -52,7 +50,6 @@ module.exports = function Model() {
       if(err)
         callback(err);
       else {
-        collection = db.collection(dataMongo.collection);
         collection.findOne( {'_id': new ObjectId(id)}, function(err, item) {
           if(err)
             callback(err);
@@ -86,12 +83,13 @@ module.exports = function Model() {
         hasKeyToAdd=true;
       }
     }
-    var self= this;
-    db.collection('node', function(err, collection) {
-      if (err)
+    var self = this;
+
+    db.open(function(err, db){
+      if(err)
         callback(err);
       else {
-        if(hasKeyToAdd && hasKeyToRemove)
+       if(hasKeyToAdd && hasKeyToRemove)
           collection.updateOne({'_id':new ObjectId(id)}, {$set:keyToAdd, $unset:keyToRemove}, function(err, result) {
             if (err)
               callback(err, null);
@@ -130,7 +128,8 @@ module.exports = function Model() {
           if (err)
             callback(err, null);
           else{
-            callback(null,result);}
+            callback(null, result);
+          }
         });
       }});
   }
