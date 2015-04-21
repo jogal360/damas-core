@@ -27,10 +27,8 @@ module.exports = function(app){
 			next();
 	});
 
-	//console.log(mod);
-
 	/* CRUD operations */
-	create = function(req, res, next) {
+	create = function(req, res) {
 		var obj_keys = Object.keys(req.body);
 		var keys = req.body;
 		//Empty keys
@@ -102,48 +100,48 @@ module.exports = function(app){
 		}
 	};
 
-	// update = function(req, res){
-	// 	var id;
-	// 	var keys = req.body;
-	// 	if(req.params.id)
-	// 		id = req.params.id;
-	// 	else if(keys.id){
-	// 		id = keys.id;
-	// 		delete keys.id;
-	// 	}
-	// 	if(!id || Object.keys(keys).length === 0){
-	// 		res.status(400).send('Bad command');
-	// 	}
-	// 	else {
-	// 	    mod.update(id, keys, function(error, doc){
-	// 			if(error && !doc || (!error && !doc)){
-	// 				res.status(409).send('Update Error, please change your values');
-	// 			}
-	// 			else{
-	// 				res.json(doc);
-	// 			}
-	// 		});
-	// 	}
-	// };
+	update = function(req, res){
+		var id;
+		var keys = req.body;
+		if(req.params.id)
+			id = req.params.id;
+		else if(keys.id){
+			id = keys.id;
+			delete keys.id;
+		}
+		if(!id || Object.keys(keys).length === 0){
+			res.status(400).send('Bad command');
+		}
+		else {
+		    mod.update(id, keys, function(error, doc){
+				if(error){
+					res.status(409).send('Update Error, please change your values');
+				}
+				else{
+					res.json(doc);
+				}
+			});
+		}
+	};
 
-	// deleteNode = function(req, res){
-	// 	var id;
-	// 	if(req.params.id)
-	// 		id = req.params.id;
-	// 	else if(req.body.id)
-	// 		id = req.body.id;
-	// 	if(id)
-	// 		mod.deleteNode(id, function(error, doc){
-	// 			if(error && !doc || (!error && !doc)){
-	// 				res.status(409).send('delete Error, please change your values');
-	// 			}
-	// 			else{
-	// 				res.json(doc);
-	// 			}
-	// 		});
-	// 	else
-	// 		res.status(400).send("Bad command");
-	// };
+	deleteNode = function(req, res){
+		var id;
+		if(req.params.id)
+			id = req.params.id;
+		else if(req.body.id)
+			id = req.body.id;
+		if(id)
+			mod.deleteNode(id, function(error, doc){
+				if(error){
+					res.status(409).send('delete Error, please change your values');
+				}
+				else{
+					res.send(doc.result.n+" documents deleted.");
+				}
+			});
+		else
+			res.status(400).send("Bad command");
+	};
 
 	isValidJson = function(keys){
 		for(var val in keys){
@@ -167,8 +165,9 @@ module.exports = function(app){
 	app.get('/:id', read);
 	app.get('/', read);
 	app.post('/', create);
-	// app.put('/:id', update);
-	// app.put('/', update);
-	// app.delete('/:id', deleteNode);
-	// app.delete('/', deleteNode);
+	app.put('/:id', update);
+	app.put('/', update);
+	app.delete('/:id', deleteNode);
+	app.delete('/', deleteNode);
+
 }
