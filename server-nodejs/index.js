@@ -3,6 +3,7 @@ var http     = require('http'),
 	https    = require('https'),
 	express  = require('express'),
 	app      = express(),
+	db 		 = require('./db'),
 	fs		 = require('fs'),
 	conf 	 = require('./conf.json'),
 
@@ -18,7 +19,13 @@ var options = {
 	cert : fs.readFileSync(confConn.pathKey + confConn.cerFile)
 };
 
-//Creation server http & https
-var serverhttp  = http.createServer(app).listen(confConn.portHttp);
 
-    serverhttps = https.createServer(options, app).listen(confConn.portHttps);
+		if(!module.parent){
+		//Creation server http & https
+			var serverhttp  = http.createServer(app).listen(confConn.portHttp);
+			    serverhttps = https.createServer(options, app).listen(confConn.portHttps);
+		}
+		else {
+			module.exports = app;
+		}
+	
